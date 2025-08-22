@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>மதுகை – Fundraising</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1:#0f1226; --bg-2:#141a39; --card:#121735; --glass: rgba(255,255,255,.08);
+      --text:#f4f7ff; --muted:#a7b0d6; --accent:#7c5cff; --accent2:#16d6a1; --danger:#ff5c93;
+      --radius:20px; --ring:#2b2f55; --shadow:0 8px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);
+      background: radial-gradient(1200px 800px at 20% -10%, #223 0%, transparent 60%),
+                  radial-gradient(900px 700px at 120% 0%, #182048 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-1), var(--bg-2));}
+    a{color:inherit}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .title{display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4cc9f0);box-shadow:0 8px 30px rgba(124,92,255,.6)}
+    h1,h2,h3{margin:0}
+    h1{font-size:clamp(26px,4vw,40px)}
+    .sub{color:var(--muted);font-size:14px}
+    .btn{cursor:pointer;border:none;border-radius:12px;padding:10px 14px;font-weight:700}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#5a7bff);color:white;box-shadow:0 8px 24px rgba(124,92,255,.35)}
+    .btn.ghost{background:#ffffff12;color:white;border:1px solid #ffffff1a}
+    .btn.danger{background:#ff5c93;color:white}
+    .input{background:#0a0d20;border:1px solid #ffffff1a;border-radius:12px;padding:10px 12px;color:var(--text);width:100%;font-size:16px;outline:none;transition:.15s}
+    .input:focus{box-shadow:0 0 0 2px var(--accent)}
+    .card{background:linear-gradient(180deg,#151a3ad9,#0f132bcc);border:1px solid #ffffff1a;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;position:relative}
+    .card .inner{padding:20px}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-4{grid-column:span 4}.span-6{grid-column:span 6}
+    @media (max-width:1000px){.span-8,.span-4,.span-6{grid-column:span 12}}
+
+    /* Progress */
+    .money{font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-.02em;line-height:1}
+    .money small{font-size:22px;font-weight:700;opacity:.9;margin-right:6px}
+    .progress{margin-top:14px;height:18px;background:#0b1024;border:1px solid #ffffff1a;border-radius:999px;overflow:hidden}
+    .progress .bar{height:100%;width:0%;background-image:linear-gradient(90deg,var(--accent),var(--accent2));position:relative}
+    .progress .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,#ffffff22 0 10px,transparent 10px 20px);mix-blend-mode:screen;opacity:.5;animation:shimmer 3s linear infinite}
+    @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+    /* Table */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px dashed #ffffff1a;text-align:left}
+    th{color:#cfd6ff;font-size:13px}
+    td .actions{display:flex;gap:8px}
+    .pill{padding:6px 10px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff1a;cursor:pointer;font-weight:700}
+
+    /* Tabs */
+    .tabs{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff1a;cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,var(--accent),#5a7bff);border-color:transparent}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal .box{background:#10142e;border:1px solid #ffffff1a;border-radius:16px;max-width:520px;width:100%;box-shadow:var(--shadow)}
+
+    /* Login */
+    .center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+    /* Toast */
+    .toast{position:fixed;right:16px;bottom:16px;background:#111735;border:1px solid #ffffff1a;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(12px);transition:.25s}
+    .toast.show{opacity:1;transform:translateY(0)}
+  </style>
+  <!-- Firebase App (the core Firebase SDK) -->
+ <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+ <!-- Firebase Database -->
+ <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Modals -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="box">
+      <div class="inner">
+        <h3 id="modalTitle">Edit Transaction</h3>
+        <div class="grid" style="margin-top:8px">
+          <div class="span-6">
+            <label class="sub">Donor name</label>
+            <input id="m_name" class="input" />
+          </div>
+          <div class="span-6">
+            <label class="sub">Amount (Rs)</label>
+            <input id="m_amount" class="input" type="number" min="1" step="1" />
+          </div>
+          <div class="span-12">
+            <label class="sub">Time</label>
+            <input id="m_time" class="input" />
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end">
+          <button id="m_cancel" class="btn ghost" type="button">Cancel</button>
+          <button id="m_save" class="btn primary" type="button">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+<script>
+  // ======== Utils ========
+  const fmt = (n) => new Intl.NumberFormat('en-LK').format(Math.max(0, Math.round(Number(n)||0)));
+  const nowStr = () => new Date().toLocaleString();
+  const sum = (arr, sel) => arr.reduce((a,b)=> a + (sel? sel(b): b), 0);
+  const qs = (root, s) => root.querySelector(s);
+  const qsa = (root, s) => Array.from(root.querySelectorAll(s));
+
+  // ======== Views ========
+  const Routes = { HOME:'#/', LOGIN:'#/login', ADMIN:'#/admin' };
+  function layout(content, opts={}) {
+    const { showAdminLink=true } = opts;
+    return `
+      <div class="wrap">
+        <header>
+          <div class="title">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+              <h1>மதுகை 2025 </h1>
+              <div class="sub">இன்னிய தமிழ் இலங்க இடையறா இனிதென காதல்”.</div>
+            </div>
+          </div>
+          <nav style="display:flex;gap:10px;align-items:center">
+            ${showAdminLink ? `<a class="btn ghost" href="${Routes.HOME}">Public</a>
+            <a class="btn primary" href="${Routes.ADMIN}">Admin</a>` : ''}
+          </nav>
+        </header>
+        ${content}
+      </div>
+    `;
+  }
+
+  function viewHome(){
+    const d = store.get();
+    const total = sum(d.transactions, t=>Number(t.amount)||0);
+    const pct = d.target? Math.min(100, (total/d.target)*100) : 0;
+
+    const donationsRows = d.transactions.slice().reverse().map((t,i)=>`
+      <tr>
+        <td>${t.name || 'Anonymous'}</td>
+        <td>Rs ${fmt(t.amount)}</td>
+        <td>${t.time}</td>
+      </tr>
+    `).join('');
+
+    return layout(`
+      <div class="grid">
+        <section class="card span-8">
+          <div class="inner">
+            <h3>Amount Raised</h3>
+            <div class="money"><small>Rs</small><span id="raisedText">${fmt(total)}</span></div>
+            <div class="sub" style="margin-top:6px">Target: Rs ${fmt(d.target)}</div>
+            <div class="progress" style="margin-top:10px"><div class="bar" style="width:${pct}%" title="${pct.toFixed(1)}%"></div></div>
+          </div>
+        </section>
+
+        <section class="card span-12">
+          <div class="inner">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <h3>Donor History</h3>
+              <button id="exportCsv" class="btn ghost" type="button">Export CSV</button>
+            </div>
+            <div style="overflow:auto">
+              <table>
+                <thead><tr><th>Donor</th><th>Amount</th><th>Time</th></tr></thead>
+                <tbody id="donorTbody">${donationsRows || `<tr><td colspan="3" class="sub">No donations yet.</td></tr>`}</tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+      <section>
+        <footer>
+          <p>Design with ❤️ by Sibo 88 </p>
+        </footer>
+      </section>
+    `);
+  }
+
+  function viewLogin(){  
+    return `
+      <div class="center">
+        <div class="card" style="width:100%;max-width:460px">
+          <div class="inner">
+            <div class="title" style="margin-bottom:10px">
+              <div class="logo"></div>
+              <div>
+                <h2>Admin Login</h2>
+                <div class="sub">Enter admin password to continue.</div>
+              </div>
+            </div>
+            <input id="loginPass" class="input" type="password" placeholder="Password" />
+            <div style="display:flex;gap:10px;margin-top:12px">
+              <a class="btn ghost" href="${Routes.HOME}">Back</a>
+              <button id="loginBtn" class="btn primary" type="button">Login</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function viewAdmin(){ 
+    const d = store.get();
+    const total = sum(d.transactions, t=>Number(t.amount)||0);
+    const pct = d.target? Math.min(100, (total/d.target)*100) : 0;
+
+    const rows = d.transactions.map((t,i)=>`
+      <tr data-i="${i}">
+        <td>${t.name || 'Anonymous'}</td>
+        <td>Rs ${fmt(t.amount)}</td>
+        <td>${t.time}</td>
+        <td>
+          <div class="actions">
+            <button class="pill js-edit">Edit</button>
+            <button class="pill js-del" style="background:#3a2140;border-color:#ff6f91">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    return layout(`
+      <div class="grid">
+        <section class="card span-8">
+          <div class="inner">
+            <h3>Overview</h3>
+            <div class="money"><small>Rs</small>${fmt(total)}</div>
+            <div class="sub" style="margin-top:6px">Target: Rs <strong id="adminTargetVal">${fmt(d.target)}</strong></div>
+            <div class="progress" style="margin-top:10px"><div class="bar" style="width:${pct}%"></div></div>
+          </div>
+        </section>
+        <section class="card span-4">
+          <div class="inner">
+            <h3>Update Target</h3>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <input id="targetInput" class="input" type="number" min="0" step="100" value="${d.target}" />
+              <button id="setTarget" class="btn primary" type="button">Set</button>
+            </div>
+            <h3 style="margin-top:18px">Admin Password</h3>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <input id="newPass" class="input" type="password" placeholder="New password" />
+              <button id="setPass" class="btn ghost" type="button">Change</button>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+              <button id="exportJson" class="btn ghost" type="button">Backup JSON</button>
+              <label class="btn ghost" for="importJson" style="cursor:pointer">Restore JSON</label>
+              <input id="importJson" type="file" accept="application/json" style="display:none" />
+              <button id="logoutBtn" class="btn danger" type="button">Logout</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-6">
+          <div class="inner">
+            <h3>Add Transaction</h3>
+            <div class="grid" style="margin-top:10px">
+              <div class="span-6"><input id="a_name" class="input" placeholder="Donor name" /></div>
+              <div class="span-6"><input id="a_amount" class="input" type="number" min="1" step="1" placeholder="Amount (Rs)" /></div>
+              <div class="span-12"><input id="a_time" class="input" placeholder="Time" value="${nowStr()}"/></div>
+              <div class="span-12" style="display:flex;gap:10px;justify-content:flex-end">
+                <button id="addTx" class="btn primary" type="button">Add</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-6">
+          <div class="inner">
+            <h3>Quick Actions</h3>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+              <button class="pill js-quick" data-v="100">+100</button>
+              <button class="pill js-quick" data-v="250">+250</button>
+              <button class="pill js-quick" data-v="500">+500</button>
+              <button class="pill js-quick" data-v="1000">+1,000</button>
+              <button class="pill js-quick" data-v="5000">+5,000</button>
+              <button id="clearAll" class="pill" style="background:#2a1b1b">Clear All</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-12">
+          <div class="inner">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <h3>Transactions</h3>
+              <button id="exportCsv2" class="btn ghost" type="button">Export CSV</button>
+            </div>
+            <div style="overflow:auto">
+              <table>
+                <thead><tr><th>Donor</th><th>Amount</th><th>Time</th><th>Actions</th></tr></thead>
+                <tbody id="txTbody">${rows || `<tr><td colspan="4" class="sub">No transactions.</td></tr>`}</tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    `, { showAdminLink:true }); 
+  }
+
+  // ======== Toast ========
+  const toastEl = document.getElementById('toast');
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 2000); }
+
+  // ======== Modal ========
+  const modal = document.getElementById('modal');
+  const m_name = document.getElementById('m_name');
+  const m_amount = document.getElementById('m_amount');
+  const m_time = document.getElementById('m_time');
+  const m_cancel = document.getElementById('m_cancel');
+  const m_save = document.getElementById('m_save');
+  let modalIndex = -1;
+  m_cancel.onclick = ()=> modal.style.display='none';
+
+  // ======== Firebase Config ========
+  const firebaseConfig = {
+      apiKey: "AIzaSyDxfTYZsIXrAtMN8l89ZtIrTQ2iZIGOycE",
+      authDomain: "liveupdate-75109.firebaseapp.com",
+      databaseURL: "https://liveupdate-75109-default-rtdb.firebaseio.com/",
+      projectId: "liveupdate-75109",
+      storageBucket: "liveupdate-75109.firebasestorage.app",
+      messagingSenderId: "387348820717",
+      appId: "1:387348820717:web:b8d5786672670c901492e4",
+      measurementId: "G-3B78692NDS"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ======== Store Layer (Firebase-backed) ========
+  const store = {
+    _data: { target:100000, transactions:[], admin:{ password:'0412'} },
+    init(){ this.loadFromFirebase(); },
+    loadFromFirebase(){
+      db.ref('fundraising').once('value').then(snapshot=>{
+        const data = snapshot.val();
+        if(data){
+          this._data.transactions = data.transactions || [];
+          this._data.target = data.target || this._data.target;
+          if(data.admin) this._data.admin = data.admin;
+        }
+        render();
+      });
+    },
+    saveToFirebase(){ db.ref('fundraising').set(this._data); },
+    get(){ return this._data; },
+    set(fn){ fn(this._data); this.saveToFirebase(); }
+  };
+  store.init();
+
+  // ======== Auth helpers ========
+  function isAuthed(){ return sessionStorage.getItem('fundapp_auth') === '1'; }
+  function requireAuth(){ if(!isAuthed()){ location.hash = Routes.LOGIN; return false;} return true; }
+
+  // ======== Bindings ========
+  function bindHome(){  
+    const root = app;
+    qs(root,'#exportCsv').onclick = exportCSV;
+  }
+
+  function bindLogin(){ 
+    const root = app; 
+    const pass = qs(root,'#loginPass');
+    qs(root,'#loginBtn').onclick = ()=>{
+      const d = store.get();
+      if(pass.value === d.admin.password){ sessionStorage.setItem('fundapp_auth','1'); location.hash = Routes.ADMIN; }
+      else toast('Incorrect password');
+    };
+  }
+
+  function bindAdmin(){  
+    const root = app; 
+    const d = store.get();
+
+    qs(root,'#setTarget').onclick = ()=>{
+      const val = Math.max(0, Number(qs(root,'#targetInput').value||0));
+      store.set(s=>{ s.target = val; });
+      toast('Target updated');
+      render();
+    };
+
+    qs(root,'#setPass').onclick = ()=>{
+      const np = qs(root,'#newPass').value;
+      if(!np) return toast('Enter a password');
+      store.set(s=>{ s.admin.password = np; });
+      toast('Password changed');
+      qs(root,'#newPass').value='';
+    };
+
+    qs(root,'#logoutBtn').onclick = ()=>{ sessionStorage.removeItem('fundapp_auth'); location.hash = Routes.HOME; };
+
+    qs(root,'#addTx').onclick = ()=>{
+      const name = qs(root,'#a_name').value.trim();
+      const amt = Number(qs(root,'#a_amount').value||0);
+      const time = qs(root,'#a_time').value || nowStr();
+      if(!amt || amt<1){ toast('Enter a valid amount'); return; }
+      store.set(s=>{ s.transactions.push({name,amount:amt,time}); });
+      toast('Transaction added');
+      render();
+    };
+
+    qsa(root,'.js-quick').forEach(btn=> btn.onclick = ()=>{
+      const inc = Number(btn.dataset.v); 
+      store.set(s=>{ s.transactions.push({name:'Anonymous', amount:inc, time: nowStr()}); }); 
+      render(); 
+    });
+
+    const tbody = qs(root,'#txTbody');
+    tbody.addEventListener('click', (e)=>{
+      const tr = e.target.closest('tr'); if(!tr) return; const i = Number(tr.dataset.i);
+      if(e.target.classList.contains('js-del')){
+        if(confirm('Delete this transaction?')){ store.set(s=>{ s.transactions.splice(i,1); }); render(); }
+        return;
+      }
+      if(e.target.classList.contains('js-edit')){
+        const t = store.get().transactions[i];
+        modalIndex = i; m_name.value=t.name||''; m_amount.value=t.amount; m_time.value=t.time; modal.style.display='flex';
+      }
+    });
+
+    m_save.onclick = ()=>{
+      const i = modalIndex; if(i<0) return; 
+      const name=m_name.value.trim(); 
+      const amt=Number(m_amount.value||0); 
+      const time=m_time.value||nowStr();
+      if(!amt || amt<1){ toast('Enter a valid amount'); return; }
+      store.set(s=>{ s.transactions[i] = {name, amount:amt, time}; }); modal.style.display='none'; toast('Updated'); render();
+    };
+
+    qs(root,'#clearAll').onclick = ()=>{
+      if(!confirm('This will remove ALL transactions. Continue?')) return;
+      store.set(s=>{ s.transactions = []; }); render();
+    };
+
+  }
+
+  function exportCSV(){
+    const transactions = store.get().transactions || [];
+    const rows = [['Name','Amount','Time']];
+    transactions.forEach(t=> rows.push([t.name||'Anonymous', t.amount, t.time]));
+    const csv = rows.map(r=> r.map(v=> '"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'donations.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ======== Router / Render ========
+  const app = document.getElementById('app');
+  function render(){
+    const h = location.hash || Routes.HOME;
+    if(h.startsWith(Routes.ADMIN)){
+      if(!requireAuth()) return;
+      app.innerHTML = viewAdmin();
+      bindAdmin();
+    } else if(h.startsWith(Routes.LOGIN)){
+      app.innerHTML = viewLogin();
+      bindLogin();
+    } else{
+      app.innerHTML = viewHome();
+      bindHome();
+    }
+  }
+  window.addEventListener('hashchange', render);
+
+  // ======== Boot ========
+  if(!location.hash) location.hash = Routes.HOME;
+  render();
+</script>
+
+</body>
+</html>
